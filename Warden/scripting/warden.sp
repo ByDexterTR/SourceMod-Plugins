@@ -1,22 +1,25 @@
 #include <sourcemod>
 #include <sdktools>
 
-#define PLUGIN_VERSION   "3.0.1"
+#define PLUGIN_VERSION   "3.0.2"
 
-new Warden = -1;
-new Handle:g_cVar_mnotes = INVALID_HANDLE;
-new Handle:g_fward_onBecome = INVALID_HANDLE;
-new Handle:g_fward_onRemove = INVALID_HANDLE;
+#pragma semicolon 1
+#pragma newdecls required
 
-public Plugin:myinfo = {
-	name = "Jailbreak Warden",
-	author = "ecca",
-	description = "Jailbreak Warden script",
-	version = PLUGIN_VERSION,
+int Warden = -1;
+ConVar g_cVar_mnotes = null, g_cvar_remove_death = null, g_cvar_remove_startround = null;
+Handle g_fward_onBecome = null, g_fward_onRemoved = null, g_fward_onDeath = null, g_fward_onRemove = null;
+
+public Plugin myinfo = 
+{
+	name = "Jailbreak Warden", 
+	author = "ecca, ByDexter", 
+	description = "Jailbreak Warden script", 
+	version = PLUGIN_VERSION, 
 	url = "ffac.eu"
 };
 
-public OnPluginStart() 
+public void OnPluginStart()
 {
 	// Initialize our phrases
 	LoadTranslations("warden.phrases");
@@ -35,34 +38,38 @@ public OnPluginStart()
 	RegAdminCmd("sm_rw", RemoveWarden, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_rc", RemoveWarden, ADMFLAG_GENERIC);
 	
-	// Hooking the events
-	HookEvent("round_start", roundStart); // For the round start
-	HookEvent("player_death", playerDeath); // To check when our warden dies :)
-	
 	// For our warden to look some extra cool
 	AddCommandListener(HookPlayerChat, "say");
 	
+	// Hook
+	HookEvent("round_start", RoundStart);
+	HookEvent("player_death", OnClientDead);
+	
 	// May not touch this line
-	CreateConVar("sm_warden_version", PLUGIN_VERSION,  "The version of the SourceMod plugin JailBreak Warden, by ecca", FCVAR_REPLICATED|FCVAR_SPONLY|FCVAR_PLUGIN|FCVAR_NOTIFY|FCVAR_DONTRECORD);
-	g_cVar_mnotes = CreateConVar("sm_warden_better_notifications", "0", "0 - disabled, 1 - Will use hint and center text", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	CreateConVar("sm_warden_version", PLUGIN_VERSION, "The version of the SourceMod plugin JailBreak Warden, by ecca", FCVAR_REPLICATED | FCVAR_SPONLY | FCVAR_NOTIFY | FCVAR_DONTRECORD);
+	g_cVar_mnotes = CreateConVar("sm_better_warden_message", "0", "0 - Off, 1 - Center and Hint Text", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_cvar_remove_death = CreateConVar("sm_warden_death_remove", "1", "0 - Off, 1 - On", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_cvar_remove_startround = CreateConVar("sm_warden_roundstart_remove", "1", "0 - Off, 1 - On", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	
 	g_fward_onBecome = CreateGlobalForward("warden_OnWardenCreated", ET_Ignore, Param_Cell);
-	g_fward_onRemove = CreateGlobalForward("warden_OnWardenRemoved", ET_Ignore, Param_Cell);
+	g_fward_onRemoved = CreateGlobalForward("warden_OnWardenRemoved", ET_Ignore, Param_Cell);
+	g_fward_onRemove = CreateGlobalForward("warden_OnWardenRemove", ET_Ignore, Param_Cell);
+	g_fward_onDeath = CreateGlobalForward("wardeN_OnWardenDeath", ET_Ignore, Param_Cell);
 }
 
-public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	CreateNative("warden_exist", Native_ExistWarden);
 	CreateNative("warden_iswarden", Native_IsWarden);
 	CreateNative("warden_set", Native_SetWarden);
 	CreateNative("warden_remove", Native_RemoveWarden);
-
+	
 	RegPluginLibrary("warden");
 	
 	return APLRes_Success;
 }
 
-public Action:BecomeWarden(client, args) 
+public Action BecomeWarden(int client, int args)
 {
 	if (Warden == -1) // There is no warden , so lets proceed
 	{
@@ -71,201 +78,218 @@ public Action:BecomeWarden(client, args)
 			if (IsPlayerAlive(client)) // A dead warden would be worthless >_<
 			{
 				SetTheWarden(client);
+				return Plugin_Handled;
 			}
 			else // Grr he is not alive -.-
 			{
-				PrintToChat(client, "Warden ~ %t", "warden_playerdead");
+				PrintToChat(client, "[SM] %t", "warden_playerdead");
+				return Plugin_Handled;
 			}
 		}
 		else // Would be wierd if an terrorist would run the prison wouldn't it :p
 		{
-			PrintToChat(client, "Warden ~ %t", "warden_ctsonly");
+			PrintToChat(client, "[SM] %t", "warden_ctsonly");
+			return Plugin_Handled;
 		}
 	}
 	else // The warden already exist so there is no point setting a new one
 	{
-		PrintToChat(client, "Warden ~ %t", "warden_exist", Warden);
+		PrintToChat(client, "[SM] %t", "warden_exist", Warden);
+		return Plugin_Handled;
 	}
 }
 
-public Action:ExitWarden(client, args) 
+public Action ExitWarden(int client, int args)
 {
-	if(client == Warden) // The client is actually the current warden so lets proceed
+	if (client == Warden) // The client is actually the current warden so lets proceed
 	{
-		PrintToChatAll("Warden ~ %t", "warden_retire", client);
-		if(GetConVarBool(g_cVar_mnotes))
+		PrintToChatAll("[SM] %t", "warden_retire", client);
+		if (g_cVar_mnotes.BoolValue)
 		{
-			PrintCenterTextAll("Warden ~ %t", "warden_retire", client);
-			PrintHintTextToAll("Warden ~ %t", "warden_retire", client);
+			PrintCenterTextAll("%t", "warden_retire", client);
+			PrintHintTextToAll("%t", "warden_retire", client);
 		}
 		Warden = -1; // Open for a new warden
+		Forward_OnWardenRemove(client);
 		SetEntityRenderColor(client, 255, 255, 255, 255); // Lets remove the awesome color
+		return Plugin_Handled;
 	}
 	else // Fake dude!
 	{
-		PrintToChat(client, "Warden ~ %t", "warden_notwarden");
+		PrintToChat(client, "[SM] %t", "warden_notwarden");
+		return Plugin_Handled;
 	}
 }
 
-public Action:roundStart(Handle:event, const String:name[], bool:dontBroadcast) 
+public void OnClientDisconnect(int client)
 {
-	Warden = -1; // Lets remove the current warden if he exist
-}
-
-public Action:playerDeath(Handle:event, const String:name[], bool:dontBroadcast) 
-{
-	new client = GetClientOfUserId(GetEventInt(event, "userid")); // Get the dead clients id
-	
-	if(client == Warden) // Aww damn , he is the warden
+	if (client == Warden) // The warden disconnected, action!
 	{
-		PrintToChatAll("Warden ~ %t", "warden_dead", client);
-		if(GetConVarBool(g_cVar_mnotes))
+		PrintToChatAll("[SM] %t", "warden_disconnected");
+		if (g_cVar_mnotes.BoolValue)
 		{
-			PrintCenterTextAll("Warden ~ %t", "warden_dead", client);
-			PrintHintTextToAll("Warden ~ %t", "warden_dead", client);
-		}
-		SetEntityRenderColor(client, 255, 255, 255, 255); // Lets give him the standard color back
-		Warden = -1; // Lets open for a new warden
-	}
-}
-
-public OnClientDisconnect(client)
-{
-	if(client == Warden) // The warden disconnected, action!
-	{
-		PrintToChatAll("Warden ~ %t", "warden_disconnected");
-		if(GetConVarBool(g_cVar_mnotes))
-		{
-			PrintCenterTextAll("Warden ~ %t", "warden_disconnected", client);
-			PrintHintTextToAll("Warden ~ %t", "warden_disconnected", client);
+			PrintCenterTextAll("%t", "warden_disconnected", client);
+			PrintHintTextToAll("%t", "warden_disconnected", client);
 		}
 		Warden = -1; // Lets open for a new warden
+		Forward_OnWardenRemoved(client);
 	}
 }
 
-public Action:RemoveWarden(client, args)
+public Action RemoveWarden(int client, int args)
 {
-	if(Warden != -1) // Is there an warden at the moment ?
+	if (Warden != -1) // Is there an warden at the moment ?
 	{
 		RemoveTheWarden(client);
+		return Plugin_Handled;
 	}
 	else
 	{
-		PrintToChatAll("Warden ~ %t", "warden_noexist");
+		PrintToChatAll("[SM] %t", "warden_noexist");
+		return Plugin_Handled;
 	}
-
-	return Plugin_Handled; // Prevent sourcemod from typing "unknown command" in console
 }
 
-public Action:HookPlayerChat(client, const String:command[], args)
+public Action RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
-	if(Warden == client && client != 0) // Check so the player typing is warden and also checking so the client isn't console!
+	if (g_cvar_remove_startround.BoolValue && Warden != -1)
+		Warden = -1;
+}
+
+public Action OnClientDead(Event event, const char[] name, bool dontBroadcast)
+{
+	if (Warden != -1)
 	{
-		new String:szText[256];
-		GetCmdArg(1, szText, sizeof(szText));
-		
-		if(szText[0] == '/' || szText[0] == '@' || IsChatTrigger()) // Prevent unwanted text to be displayed.
+		int client = GetClientOfUserId(event.GetInt("userid"));
+		if (client == Warden)
 		{
+			Forward_OnWardenDeath(client);
+			if (g_cvar_remove_death.BoolValue)
+			{
+				Warden = -1;
+				PrintToChatAll("[SM] %t", "warden_dead");
+				if (g_cVar_mnotes.BoolValue)
+				{
+					PrintCenterTextAll("%t", "warden_dead");
+					PrintHintTextToAll("%t", "warden_dead");
+				}
+			}
+		}
+	}
+}
+
+public Action HookPlayerChat(int client, const char[] command, int argc)
+{
+	if (Warden == client && client != 0) // Check so the player typing is warden and also checking so the client isn't console!
+	{
+		char szText[256];
+		GetCmdArg(1, szText, sizeof(szText));
+		if (IsPlayerAlive(client)) // Typing warden is alive and his team is Counter-Terrorist
+		{
+			PrintToChatAll(" \x0B[Warden] \x10%N : \x04%s", client, szText);
 			return Plugin_Handled;
 		}
-		
-		if(IsClientInGame(client) && IsPlayerAlive(client) && GetClientTeam(client) == 3) // Typing warden is alive and his team is Counter-Terrorist
+		else
 		{
-			PrintToChatAll("[Warden] %N : %s", client, szText);
+			PrintToChatAll(" \x02*DEAD* \x0B[Warden] \x10%N : \x04%s", client, szText);
 			return Plugin_Handled;
 		}
 	}
-	
 	return Plugin_Continue;
 }
 
-public SetTheWarden(client)
+void SetTheWarden(int client)
 {
-	PrintToChatAll("Warden ~ %t", "warden_new", client);
+	PrintToChatAll("[SM] %t", "warden_new", client);
 	
-	if(GetConVarBool(g_cVar_mnotes))
+	if (g_cVar_mnotes.BoolValue)
 	{
-		PrintCenterTextAll("Warden ~ %t", "warden_new", client);
-		PrintHintTextToAll("Warden ~ %t", "warden_new", client);
+		PrintCenterTextAll("%t", "warden_new", client);
+		PrintHintTextToAll("%t", "warden_new", client);
 	}
 	Warden = client;
-	SetEntityRenderColor(client, 0, 0, 255, 255);
+	SetEntityRenderColor(client, 0, 175, 255, 255);
 	SetClientListeningFlags(client, VOICE_NORMAL);
-	
 	Forward_OnWardenCreation(client);
 }
 
-public RemoveTheWarden(client)
+void RemoveTheWarden(int client)
 {
-	PrintToChatAll("Warden ~ %t", "warden_removed", client, Warden);
-	if(GetConVarBool(g_cVar_mnotes))
+	PrintToChatAll("[SM] %t", "warden_removed", client, Warden);
+	if (g_cVar_mnotes.BoolValue)
 	{
-		PrintCenterTextAll("Warden ~ %t", "warden_removed", client);
-		PrintHintTextToAll("Warden ~ %t", "warden_removed", client);
+		PrintCenterTextAll("%t", "warden_removed", client);
+		PrintHintTextToAll("%t", "warden_removed", client);
 	}
 	SetEntityRenderColor(Warden, 255, 255, 255, 255);
 	Warden = -1;
-	
 	Forward_OnWardenRemoved(client);
 }
 
-public Native_ExistWarden(Handle:plugin, numParams)
+public int Native_ExistWarden(Handle plugin, int numParams)
 {
-	if(Warden != -1)
+	if (Warden != -1)
 		return true;
 	
 	return false;
 }
 
-public Native_IsWarden(Handle:plugin, numParams)
+public int Native_IsWarden(Handle plugin, int numParams)
 {
-	new client = GetNativeCell(1);
-	
-	if(!IsClientInGame(client) && !IsClientConnected(client))
-		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
-	
-	if(client == Warden)
-		return true;
-	
-	return false;
-}
-
-public Native_SetWarden(Handle:plugin, numParams)
-{
-	new client = GetNativeCell(1);
-	
+	int client = GetNativeCell(1);
 	if (!IsClientInGame(client) && !IsClientConnected(client))
 		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	
-	if(Warden == -1)
-	{
+	if (client == Warden)
+		return true;
+	
+	return false;
+}
+
+public int Native_SetWarden(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	if (!IsClientInGame(client) && !IsClientConnected(client))
+		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
+	
+	if (Warden == -1)
 		SetTheWarden(client);
-	}
 }
 
-public Native_RemoveWarden(Handle:plugin, numParams)
+public int Native_RemoveWarden(Handle plugin, int numParams)
 {
-	new client = GetNativeCell(1);
-	
+	int client = GetNativeCell(1);
 	if (!IsClientInGame(client) && !IsClientConnected(client))
 		ThrowNativeError(SP_ERROR_INDEX, "Client index %i is invalid", client);
 	
-	if(client == Warden)
-	{
+	if (client == Warden)
 		RemoveTheWarden(client);
-	}
 }
 
-public Forward_OnWardenCreation(client)
+public void Forward_OnWardenCreation(int client)
 {
 	Call_StartForward(g_fward_onBecome);
 	Call_PushCell(client);
 	Call_Finish();
 }
 
-public Forward_OnWardenRemoved(client)
+public void Forward_OnWardenDeath(int client)
+{
+	Call_StartForward(g_fward_onDeath);
+	Call_PushCell(client);
+	Call_Finish();
+}
+
+public void Forward_OnWardenRemoved(int client)
+{
+	Call_StartForward(g_fward_onRemoved);
+	Call_PushCell(client);
+	Call_Finish();
+}
+
+public void Forward_OnWardenRemove(int client)
 {
 	Call_StartForward(g_fward_onRemove);
 	Call_PushCell(client);
 	Call_Finish();
-}
+} 

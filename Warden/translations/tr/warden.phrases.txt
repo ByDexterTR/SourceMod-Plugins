@@ -1,0 +1,56 @@
+"Phrases"
+{
+	"warden_new"
+	{
+		"#format"	"{1:N}"
+		"tr"		"{1} adlı oyuncu komutçu oldu."
+	}
+	
+	"warden_playerdead"
+	{
+		"tr"		"sadece canlı oyuncular gardiyan olabilir."
+	}
+	
+	"warden_ctsonly"
+	{
+		"tr"		"sadece Anti-Terörist takımı komutçu olabilir."
+	}
+	
+	"warden_exist"
+	{
+		"#format"	"{1:N}"
+		"tr"		"Zaten komutçu var: {1}"
+	}
+	
+	"warden_retire"
+	{
+		"#format"	"{1:N}"
+		"tr"		"{1} emekli olmaya karar verdi. Şimdi yeni bir tane seçebilirsiniz."
+	}
+	
+	"warden_notwarden"
+	{
+		"tr"		"sen komutçu değilsin ve bu yüzden emekli olamazsın."
+	}
+	
+	"warden_dead"
+	{
+		"tr"		"komutçu artık öldü. Şimdi yeni bir tane seçebilirsiniz."
+	}
+	
+	"warden_disconnected"
+	{
+		"tr"		"komutçunun bağlantısı kesildi. Şimdi yeni bir tane seçebilirsiniz."
+	}
+	
+	"warden_removed"
+	{
+		"#format"	"{1:N},{2:N}"
+		"tr"		"{1} adlı yönetici {2} adlı komutçuyu kovdu!"
+	}
+	
+	"warden_noexist"
+	{
+		"tr"		"ateş edecek gardiyan yoktu."
+	}
+}

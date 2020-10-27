@@ -1,0 +1,56 @@
+"Phrases"
+{
+	"warden_new"
+	{
+		"#format"	"{1:N}"
+		"pt"		"{1} Agora, o diretor da prisão.."
+	}
+	
+	"warden_playerdead"
+	{
+		"pt"		"Apenas os jogadores podem viver o diretor.."
+	}
+	
+	"warden_ctsonly"
+	{
+		"pt"		"Apenas o diretor pode ser AntiTerrorista."
+	}
+	
+	"warden_exist"
+	{
+		"#format"	"{1:N}"
+		"pt"		"Atual diretor: {1}"
+	}
+	
+	"warden_retire"
+	{
+		"#format"	"{1:N}"
+		"pt"		"{1} o atual diretor, decidiu se aposentar. Agora começa a escolher um novo.."
+	}
+	
+	"warden_notwarden"
+	{
+		"pt"		"Você não é o diretor, e você não pode se aposentar.."
+	}
+	
+	"warden_dead"
+	{
+		"pt"		"O diretor está morto, agora começa a escolher um novo."
+	}
+	
+	"warden_disconnected"
+	{
+		"pt"		"O diretor deixou o jogo. Agora começa a escolher um novo."
+	}
+	
+	"warden_removed"
+	{
+		"#format"	"{1:N},{2:N}"
+		"pt"		"O Administrador do: {1} o diretor se aposentou cedo: {2}"
+	}
+	
+	"warden_noexist"
+	{
+		"pt"		"Atualmente não há carcereiro na prisão."
+	}
+}

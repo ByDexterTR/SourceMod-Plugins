@@ -1,0 +1,56 @@
+"Phrases"
+{
+	"warden_new"
+	{
+		"#format"	"{1:N}"
+		"sv"		"{1} har blivit fängelsedirektör över detta fängelse."
+	}
+	
+	"warden_playerdead"
+	{
+		"sv"		"Endast levande spelare kan bli fängelsedirektör."
+	}
+	
+	"warden_ctsonly"
+	{
+		"sv"		"Endast Anti-Terrorister kan bli fängelsedirektör."
+	}
+	
+	"warden_exist"
+	{
+		"#format"	"{1:N}"
+		"sv"		"nuvarande fängelsedirektör är: {1}"
+	}
+	
+	"warden_retire"
+	{
+		"#format"	"{1:N}"
+		"sv"		"{1} har bestämt sig för att avgå. Ni bör nu välja en ny."
+	}
+	
+	"warden_notwarden"
+	{
+		"sv"		"du är inte fängelsedirektören och kan därför inte avgå."
+	}
+	
+	"warden_dead"
+	{
+		"sv"		"fängelsedirektören är död. Ni bör nu välja en ny."
+	}
+	
+	"warden_disconnected"
+	{
+		"sv"		"fängelsedirektören har lämnat. Ni bör nu välja en ny."
+	}
+	
+	"warden_removed"
+	{
+		"#format"	"{1:N},{2:N}"
+		"sv"		"Admin: {1} avskedade Fängelsedirektören: {2}"
+	}
+	
+	"warden_noexist"
+	{
+		"sv"		"det fanns ingen fängelsedirektör att avskeda."
+	}
+}

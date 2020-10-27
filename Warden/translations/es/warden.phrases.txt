@@ -1,0 +1,56 @@
+"Phrases"
+{
+	"warden_new"
+	{
+		"#format"	"{1:N}"
+		"es"		"{1} Es ahora el AlcÃ¡ide de esta PrisiÃ³n."
+	}
+	
+	"warden_playerdead"
+	{
+		"es"		"SÃ³lo los jugadores vivos, pueden ser el AlcÃ¡ide."
+	}
+	
+	"warden_ctsonly"
+	{
+		"es"		"SÃ³lo los Anti-Terroristas pueden ser el AlcÃ¡ide."
+	}
+	
+	"warden_exist"
+	{
+		"#format"	"{1:N}"
+		"es"		"AlcÃ¡ide Actual: {1}"
+	}
+	
+	"warden_retire"
+	{
+		"#format"	"{1:N}"
+		"es"		"{1} ha decidido jubilarse. Ahora toca elegir uno nuevo."
+	}
+	
+	"warden_notwarden"
+	{
+		"es"		"No eres el AlcÃ¡ide, y no puedes jubilarte."
+	}
+	
+	"warden_dead"
+	{
+		"es"		"El AlcÃ¡ide ha muerto! Ahora toca elegir uno juevo."
+	}
+	
+	"warden_disconnected"
+	{
+		"es"		"El AlcÃ¡ide ha desertado. Ahora toca elegir uno nuevo."
+	}
+	
+	"warden_removed"
+	{
+		"#format"	"{1:N},{2:N}"
+		"es"		"Administrador: {1} ha prejubilado al AlcÃ¡ide: {2}"
+	}
+	
+	"warden_noexist"
+	{
+		"es"		"Actualmente no existe ningÃºn AlcÃ¡ide en la prisiÃ³n."
+	}
+}
